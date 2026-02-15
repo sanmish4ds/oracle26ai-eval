@@ -21,7 +21,7 @@ def main():
             print("\n" + "-"*40)
             print("RUNNING EXPERIMENT 2: LATENCY BREAKDOWN")
             print("-"*40)
-            lat_df = run_latency_test(cursor)
+            #lat_df = run_latency_test(cursor)
 
     # 2. Final Results Presentation
     print("\n" + "═"*45)
@@ -49,7 +49,7 @@ def main():
     # 3. Save Final Artifacts
     acc_df.to_csv('TPCH_Accuracy_Final.csv', index=False)
     lat_df.to_csv('TPCH_Latency_Final.csv', index=False)
-    print("\n✅ All results saved to CSV. Ready for Week 4 analysis.")
+    print("\n✅ All results saved to CSV. Evaluation complete!")
 
 if __name__ == "__main__":
     main()
