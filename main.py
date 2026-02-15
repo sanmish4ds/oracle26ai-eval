@@ -21,7 +21,7 @@ def main():
             print("\n" + "-"*40)
             print("RUNNING EXPERIMENT 2: LATENCY BREAKDOWN")
             print("-"*40)
-            #lat_df = run_latency_test(cursor)
+            lat_df = run_latency_test(cursor)
 
     # 2. Final Results Presentation
     print("\n" + "═"*45)
