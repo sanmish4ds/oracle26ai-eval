@@ -41,4 +41,14 @@ def run_accuracy_test(cursor):
             'semantic_match': match, 'latency_sec': round(latency, 2)
         })
 
-    return pd.DataFrame(results)
+    results_df = pd.DataFrame(results)
+    
+    # Calculate metrics
+    print("\n=== ACCURACY METRICS ===")
+    print(f"Overall Success Rate: {results_df['ai_success'].mean():.2%}")
+    print(f"Semantic Match Rate: {results_df['semantic_match'].mean():.2%}")
+    
+    print("\n=== BY COMPLEXITY ===")
+    print(results_df.groupby('complexity')['semantic_match'].mean())
+    
+    return results_df
