@@ -1,0 +1,16 @@
+# Oracle Secrets
+Wallet_*/
+*.zip
+*.sso
+*.p12
+*.pem
+tnsnames.ora
+
+# Python/Environment
+oracle_env/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Results
+*.csv
