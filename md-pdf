@@ -1,0 +1,69 @@
+# Evaluating Oracle's Native AI SQL Generation on TPC-H Benchmark
+
+**Author:** Sanjay Mishra  
+**Affiliation:** Independent Researcher, USA  
+**Date:** February 2026  
+**Status:** Completed
+
+---
+
+## Executive Summary
+This paper presents a comprehensive evaluation of Oracle Database's native AI SQL generation capabilities using the 22-query TPC-H benchmark. We measure three critical dimensions: semantic correctness, latency breakdown (LLM generation vs. database execution), and complexity correlation. 
+
+Baseline evaluation reveals a 63.64% semantic match rate with 100% syntactic success. Importantly, validated prompt engineering experiments demonstrate that schema context and domain hints alone can improve accuracy to **86.36%**, achieving a +22.73 percentage point improvement without model fine-tuning. These findings establish a clear, validated path to production-ready accuracy through practical prompt optimization.
+
+---
+
+## 1. Introduction
+### 1.1 Background
+The integration of large language models (LLMs) into database systems represents a paradigm shift in query generation. Oracle's `SELECT AI` and `DBMS_CLOUD_AI.GENERATE()` functions expose this capability natively within the database. However, limited public research exists on their accuracy, latency characteristics, and failure modes.
+
+### 1.2 Research Questions
+1. **Accuracy:** How accurately does Oracle's AI generate semantically equivalent SQL from natural language?
+2. **Performance:** What is the latency breakdown between LLM generation and database execution?
+3. **Complexity:** Does query complexity correlate with generation accuracy?
+4. **Failure Modes:** What patterns explain the remaining errors?
+
+---
+
+## 2. Methodology
+### 2.1 Benchmark: TPC-H
+The evaluation utilized 22 queries across three complexity levels: Simple (4), Medium (8), and Complex (10). The TPC-H dataset consists of 8 tables including `CUSTOMER`, `ORDERS`, `LINEITEM`, and `PART`.
+
+### 2.2 Metrics
+* **Semantic Match Rate:** (Queries with result set match) / Total
+* **LLM Latency (ms):** Time for AI to generate SQL
+* **Oracle Execution (ms):** Time for DB to execute generated SQL
+
+---
+
+## 3. Results and Analysis
+### 3.1 Accuracy Results
+| Metric | Baseline | Enhanced Strategy | Improvement |
+| :--- | :--- | :--- | :--- |
+| **Overall Accuracy** | 63.64% | 86.36% | +22.73% |
+| **Simple Queries** | 75% | 75% | 0% |
+| **Medium Queries** | 50% | 75% | +25% |
+| **Complex Queries** | 70% | 100% | +30% |
+
+### 3.2 Latency Breakdown
+| Metric | Value |
+| :--- | :--- |
+| **Avg. LLM Generation Time** | 3,303.47 ms |
+| **Avg. Oracle Execution Time** | 47.28 ms |
+| **Avg. Overhead Ratio** | 69.9x |
+
+**Key Finding:** The bottleneck is 100% AI generation (~3.3s). [cite_start]Oracle execution is trivial (47ms average), meaning AI "thinking" time dominates total latency[cite: 1].
+
+---
+
+## 4. Discussion: Why the Enhanced Strategy Works
+The Enhanced strategy succeeded by addressing three root causes identified in the baseline failures:
+1. **Column Projection Ambiguity:** Schema context explicitly lists available columns.
+2. **Formula Comprehension:** Domain hints clarified calculations (e.g., `discount = price * (1-rate)`).
+3. **Entity Disambiguation:** Glossary clarified naming conventions (e.g., `Customer#1` maps to `C_CUSTKEY=1`).
+
+---
+
+## 5. Conclusion
+Deploying an "Enhanced" prompting strategy allows organizations to achieve **86.36% accuracy** on complex TPC-H workloads today without the need for expensive model fine-tuning. This approach is deployable across all Oracle 23ai versions with zero database modifications.

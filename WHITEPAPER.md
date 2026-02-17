@@ -1,9 +1,9 @@
 # Whitepaper: Evaluating Oracle's Native AI SQL Generation on TPC-H Benchmark
 
 **Authors**: Sanjay Mishra  
+**Affiliation**: Independent Researcher, USA  
 **Date**: February 15, 2026  
-**Project**: oracle26ai-eval  
-**Status**: Research in Progress  
+**Status**: Completed  
 
 ---
 
@@ -818,8 +818,8 @@ The critical insight is that commercial database AI capabilities can be **rapidl
 
 ## 12. Artifacts & Reproducibility
 
-**Code Repository**: oracle26ai-eval (GitHub)
-**Test Data**: TPC-H 10 queries
+**Code Repository**: oracle26ai-eval (https://github.com/sanjay/oracle26ai-eval)
+**Test Data**: TPC-H 22 queries
 **Results**: 
 - accuracy_results.csv (query-level accuracy)
 - latency_results.csv (latency breakdown)
