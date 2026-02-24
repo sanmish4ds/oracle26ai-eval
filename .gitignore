@@ -5,6 +5,7 @@ Wallet_*/
 *.p12
 *.pem
 tnsnames.ora
+.env
 
 # Python/Environment
 oracle_env/
