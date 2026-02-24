@@ -1,6 +1,6 @@
 # db_utils.py
 import oracledb
-import config
+from . import config
 
 def get_connection():
     conn = oracledb.connect(

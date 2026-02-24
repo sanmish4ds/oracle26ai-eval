@@ -1,6 +1,6 @@
 import time
 import pandas as pd
-from db_utils import init_ai_session
+from ..core.db_utils import init_ai_session
 
 def run_latency_test(cursor):
     """
