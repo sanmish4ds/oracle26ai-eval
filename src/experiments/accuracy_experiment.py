@@ -1,9 +1,7 @@
 # accuracy_eval.py
-import sys
 import time
 import pandas as pd
-sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
-from src.core.db_utils import init_ai_session
+from ..core.db_utils import init_ai_session
 
 def run_accuracy_test(cursor):
     init_ai_session(cursor)
@@ -75,12 +73,5 @@ def run_accuracy_test(cursor):
     
     print("\n=== BY COMPLEXITY ===")
     print(results_df.groupby('complexity')['semantic_match'].mean())
-
     
     return results_df
-
-if __name__ == "__main__":
-    from src.core.db_utils import get_connection
-    with get_connection() as conn:
-        with conn.cursor() as cursor:
-            run_accuracy_test(cursor)

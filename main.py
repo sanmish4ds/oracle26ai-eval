@@ -1,9 +1,12 @@
 # main.py
 import pandas as pd
-from db_utils import get_connection
-from experiments.accuracy_experiment import run_accuracy_test
-from experiments.latency_experiment import run_latency_test
-import config
+import sys
+sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
+
+from src.core.db_utils import get_connection
+from src.experiments.accuracy_experiment import run_accuracy_test
+from src.experiments.latency_experiment import run_latency_test
+from src.core import config
 
 def main():
     print("🚀 Starting TPC-H Comprehensive Evaluation Suite...")
@@ -49,7 +52,7 @@ def main():
     # 3. Save Final Artifacts
     acc_df.to_csv('TPCH_Accuracy_Final.csv', index=False)
     lat_df.to_csv('TPCH_Latency_Final.csv', index=False)
-    print("\n✅ All results saved to CSV. Ready for Week 4 analysis.")
+    print("\n✅ All results saved to CSV. Evaluation complete!")
 
 if __name__ == "__main__":
     main()

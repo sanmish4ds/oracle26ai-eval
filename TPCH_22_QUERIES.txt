@@ -1,0 +1,71 @@
+-- Extended TPC-H Test Queries (22 total)
+-- This file contains all 22 standard TPC-H benchmark queries
+
+-- Simple Queries (Queries 1-5)
+Q1: What is the total quantity of items sold?
+Ground Truth: SELECT SUM(L_QUANTITY) FROM LINEITEM
+
+Q2: How many customers are there?
+Ground Truth: SELECT COUNT(*) FROM CUSTOMER
+
+Q3: What is the average retail price of parts?
+Ground Truth: SELECT AVG(P_RETAILPRICE) FROM PART
+
+Q4: List all regions.
+Ground Truth: SELECT * FROM REGION
+
+Q5: How many suppliers are there?
+Ground Truth: SELECT COUNT(*) FROM SUPPLIER
+
+-- Medium Queries (Queries 6-15)
+Q6: Show me all orders from 1996.
+Ground Truth: SELECT * FROM ORDERS WHERE O_ORDERDATE BETWEEN TO_DATE('1996-01-01', 'YYYY-MM-DD') AND TO_DATE('1996-12-31', 'YYYY-MM-DD')
+
+Q7: Show top 5 most expensive orders.
+Ground Truth: SELECT * FROM (SELECT * FROM ORDERS ORDER BY O_TOTALPRICE DESC) WHERE ROWNUM <= 5
+
+Q8: Which nation has the most customers?
+Ground Truth: SELECT N_NAME, COUNT(*) FROM CUSTOMER JOIN NATION ON C_NATIONKEY = N_NATIONKEY GROUP BY N_NAME ORDER BY 2 DESC FETCH FIRST 1 ROW ONLY
+
+Q9: List the names of customers in the ASIA region.
+Ground Truth: SELECT C.C_NAME FROM CUSTOMER C JOIN NATION N ON C.C_NATIONKEY = N.N_NATIONKEY JOIN REGION R ON N.N_REGIONKEY = R.R_REGIONKEY WHERE R.R_NAME = 'ASIA'
+
+Q10: Find orders placed by Customer#1.
+Ground Truth: SELECT * FROM ORDERS WHERE O_CUSTKEY = 1
+
+Q11: What is the total discount given on all items?
+Ground Truth: SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) FROM LINEITEM
+
+Q12: How many unique parts were supplied by Supplier#1?
+Ground Truth: SELECT COUNT(DISTINCT PS_PARTKEY) FROM PARTSUPP S JOIN SUPPLIER SUP ON S.PS_SUPPKEY = SUP.S_SUPPKEY WHERE SUP.S_NAME = 'Supplier#000000001'
+
+Q13: What is the average order value?
+Ground Truth: SELECT AVG(O_TOTALPRICE) FROM ORDERS
+
+Q14: List all parts with price greater than 50.
+Ground Truth: SELECT P_NAME, P_RETAILPRICE FROM PART WHERE P_RETAILPRICE > 50
+
+Q15: How many orders were placed in 1997?
+Ground Truth: SELECT COUNT(*) FROM ORDERS WHERE EXTRACT(YEAR FROM O_ORDERDATE) = 1997
+
+-- Complex Queries (Queries 16-22)
+Q16: Show revenue by region for year 1996.
+Ground Truth: SELECT R.R_NAME, SUM(L.L_EXTENDEDPRICE * (1 - L.L_DISCOUNT)) FROM LINEITEM L JOIN ORDERS O ON L.L_ORDERKEY = O.O_ORDERKEY JOIN CUSTOMER C ON O.O_CUSTKEY = C.C_CUSTKEY JOIN NATION N ON C.C_NATIONKEY = N.N_NATIONKEY JOIN REGION R ON N.N_REGIONKEY = R.R_REGIONKEY WHERE EXTRACT(YEAR FROM O.O_ORDERDATE) = 1996 GROUP BY R.R_NAME
+
+Q17: Find the top 5 customers by total spending.
+Ground Truth: SELECT C.C_CUSTKEY, C.C_NAME, SUM(O.O_TOTALPRICE) FROM CUSTOMER C JOIN ORDERS O ON C.C_CUSTKEY = O.O_CUSTKEY GROUP BY C.C_CUSTKEY, C.C_NAME ORDER BY 3 DESC FETCH FIRST 5 ROWS ONLY
+
+Q18: What is the total cost of parts supplied by each supplier?
+Ground Truth: SELECT S.S_SUPPKEY, S.S_NAME, SUM(PS.PS_SUPPLYCOST * PS.PS_AVAILQTY) FROM SUPPLIER S JOIN PARTSUPP PS ON S.S_SUPPKEY = PS.PS_SUPPKEY GROUP BY S.S_SUPPKEY, S.S_NAME
+
+Q19: Average revenue by part type and year.
+Ground Truth: SELECT P.P_TYPE, EXTRACT(YEAR FROM O.O_ORDERDATE) AS YEAR, AVG(L.L_EXTENDEDPRICE * (1 - L.L_DISCOUNT)) FROM LINEITEM L JOIN ORDERS O ON L.L_ORDERKEY = O.O_ORDERKEY JOIN PART P ON L.L_PARTKEY = P.P_PARTKEY GROUP BY P.P_TYPE, EXTRACT(YEAR FROM O.O_ORDERDATE)
+
+Q20: Count orders per customer per year.
+Ground Truth: SELECT C.C_CUSTKEY, EXTRACT(YEAR FROM O.O_ORDERDATE) AS YEAR, COUNT(*) FROM CUSTOMER C LEFT JOIN ORDERS O ON C.C_CUSTKEY = O.O_CUSTKEY GROUP BY C.C_CUSTKEY, EXTRACT(YEAR FROM O.O_ORDERDATE)
+
+Q21: Find customers who placed no orders in 1996.
+Ground Truth: SELECT C.C_CUSTKEY, C.C_NAME FROM CUSTOMER C WHERE NOT EXISTS (SELECT 1 FROM ORDERS O WHERE C.C_CUSTKEY = O.O_CUSTKEY AND EXTRACT(YEAR FROM O.O_ORDERDATE) = 1996)
+
+Q22: Total quantity shipped by line status.
+Ground Truth: SELECT L.L_LINESTATUS, SUM(L.L_QUANTITY) FROM LINEITEM L GROUP BY L.L_LINESTATUS
