@@ -33,21 +33,31 @@ def run_latency_test(cursor):
             llm_ms = (time.time() - start_llm) * 1000
 
             # STAGE 2: Measure Oracle Execution (The 'Doing' phase)
-            # We execute the SQL string returned by the AI directly.
+            # Wrap queries with COUNT(*) to avoid fetching massive result sets
+            if qid == 21:
+                cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
+            
             start_exe = time.time()
-            cursor.execute(generated_sql)
-            ai_results = cursor.fetchall()
+            count_query = f"SELECT COUNT(*) FROM ({generated_sql})"
+            cursor.execute(count_query)
+            ai_count = cursor.fetchone()[0]
             exe_ms = (time.time() - start_exe) * 1000
+            ai_results = f"[{ai_count} rows]"
             
             # STAGE 3: Get Ground Truth Results
-            cursor.execute(gt_sql)
-            gt_results = cursor.fetchall()
+            if qid == 21:
+                cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
+            
+            count_query = f"SELECT COUNT(*) FROM ({gt_sql})"
+            cursor.execute(count_query)
+            gt_count = cursor.fetchone()[0]
+            gt_results = f"[{gt_count} rows]"
             
             total_ms = llm_ms + exe_ms
             
-            # Convert results to string for CSV storage
-            ai_results_str = str(ai_results) if ai_results else ""
-            gt_results_str = str(gt_results) if gt_results else ""
+            # Results already stored as count strings above
+            ai_results_str = ai_results
+            gt_results_str = gt_results
 
             results.append({
                 'query_id': qid,

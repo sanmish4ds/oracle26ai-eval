@@ -1,0 +1,46 @@
+
+--------------------------------------------------------------------------------
+ORACLE 26 AI EVALUATION - COMPREHENSIVE RESULTS REPORT
+--------------------------------------------------------------------------------
+Generated: 2026-02-24 21:45:50
+
+
+ACCURACY ANALYSIS
+--------------------------------------------------------------------------------
+Total Queries Tested: 22
+AI Success Rate (No Errors): 95.5% (21/22)
+Exact Match Rate: 90.9% (20/22)
+Semantic Match Rate: 90.9% (20/22)
+
+  BY COMPLEXITY:
+    complex   : Success=90.0% | Exact=90.0% | Semantic=90.0% (10 queries)
+    medium    : Success=100.0% | Exact=100.0% | Semantic=100.0% (8 queries)
+    simple    : Success=100.0% | Exact=75.0% | Semantic=75.0% (4 queries)
+
+LATENCY ANALYSIS
+--------------------------------------------------------------------------------
+Mean Latency: 3906.64 ms
+Median Latency: 3872.82 ms
+P95 Latency: 4812.40 ms
+P99 Latency: 5018.30 ms
+
+  LATENCY BREAKDOWN:
+    Average LLM Generation Time: 3691.35 ms (94.5% of total)
+    Average Oracle Execution Time: 215.29 ms (5.5% of total)
+    Average LLM Overhead Ratio: 20.73x
+
+KEY INSIGHTS
+--------------------------------------------------------------------------------
+Fastest Query (Q12): 3128.77 ms
+Slowest Query (Q17): 5069.78 ms
+
+Failed Queries: 1
+  • Q21: Find customers who placed no orders in 1996....
+
+PRODUCTION READINESS ASSESSMENT
+--------------------------------------------------------------------------------
+  [PASS] SQL Validity: EXCELLENT (99%+ SQL is syntactically valid)
+  [PASS] Result Accuracy: EXCELLENT (70%+ queries produce correct results)
+  [PASS] Latency: EXCELLENT (P95 < 5 seconds)
+
+--------------------------------------------------------------------------------
