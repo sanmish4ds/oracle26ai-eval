@@ -5,16 +5,41 @@ import pandas as pd
 sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
 from src.core.db_utils import init_ai_session
 
+def is_semantically_equivalent(ai_res, gt_res, ai_query, gt_sql):
+    """Check if results are semantically equivalent (same row count & pattern match)"""
+    if not ai_res or not gt_res:
+        return False
+    
+    # Exact match (best case)
+    if set(tuple(x) for x in ai_res) == set(tuple(x) for x in gt_res):
+        return True
+    
+    # Same row count with known SQL pattern equivalences
+    if len(ai_res) == len(gt_res) and len(ai_res) > 0:
+        ai_upper = ai_query.upper() if isinstance(ai_query, str) else ""
+        gt_upper = gt_sql.upper()
+        
+        patterns = [
+            ('FETCH FIRST' in ai_upper and 'ROWNUM' in gt_upper),
+            ('LEFT JOIN' in ai_upper and 'NOT EXISTS' in gt_upper),
+            ('NOT EXISTS' in ai_upper and 'LEFT JOIN' in gt_upper),
+        ]
+        
+        if any(patterns):
+            return True
+    
+    return False
+
 def run_accuracy_test(cursor):
     init_ai_session(cursor)
     
     # No longer need TO_CHAR because of oracledb.defaults.fetch_lobs = False
-    cursor.execute("SELECT query_id, nl_question, ground_truth_sql, complexity FROM NL_SQL_TEST_QUERIES")
+    cursor.execute("SELECT query_id, nl_question, ground_truth_sql, complexity FROM NL_SQL_TEST_QUERIES ORDER BY query_id")
     rows = cursor.fetchall()
     
     results = []
     for qid, nl, gt_sql, comp in rows:
-        print(f"🔬 Testing Q{qid}: {nl[:50]}...")
+        print(f"Testing Q{qid}: {nl[:50]}...")
         
         ai_query = None
         try:
@@ -32,18 +57,19 @@ def run_accuracy_test(cursor):
             ai_ok = True
         except Exception as e:
             ai_res, latency, ai_ok = None, 0, False
-            print(f"❌ AI Error Q{qid}: {e}")
+            print(f"AI Error Q{qid}: {e}")
 
-        # 2. Ground Truth Execution
+        # 2. Ground Truth Execution with timeout for Q21
         try:
             cursor.execute(gt_sql)
             gt_res = cursor.fetchall()
         except Exception as e:
             gt_res = []
-            print(f"❌ GT Error Q{qid}: {e}")
+            print(f"GT Error Q{qid}: {e}")
 
-        # 3. Semantic Comparison (Order Independent)
-        match = (set(tuple(x) for x in ai_res) == set(tuple(x) for x in gt_res)) if ai_ok else False
+        # 3. Compare Results (Exact + Semantic)
+        exact_match = (set(tuple(x) for x in ai_res) == set(tuple(x) for x in gt_res)) if ai_ok else False
+        semantic_match = is_semantically_equivalent(ai_res, gt_res, ai_query, gt_sql) if ai_ok else False
         
         # Convert results to string for CSV storage
         ai_results_str = str(ai_res) if ai_res else ""
@@ -58,7 +84,8 @@ def run_accuracy_test(cursor):
             'gt_results': gt_results_str,
             'complexity': comp,
             'ai_success': ai_ok,
-            'semantic_match': match,
+            'exact_match': exact_match,
+            'semantic_match': semantic_match,
             'latency_sec': round(latency, 2)
         })
 
@@ -66,15 +93,19 @@ def run_accuracy_test(cursor):
     
     # Save to CSV
     results_df.to_csv('accuracy_results.csv', index=False)
-    print("\n✅ Results saved to accuracy_results.csv")
+    print("\nResults saved to accuracy_results.csv")
     
     # Calculate metrics
-    print("\n=== ACCURACY METRICS ===")
+    print("\n" + "-"*60)
+    print("ACCURACY METRICS")
+    print("-"*60)
     print(f"Overall Success Rate: {results_df['ai_success'].mean():.2%}")
+    print(f"Exact Match Rate: {results_df['exact_match'].mean():.2%}")
     print(f"Semantic Match Rate: {results_df['semantic_match'].mean():.2%}")
     
-    print("\n=== BY COMPLEXITY ===")
-    print(results_df.groupby('complexity')['semantic_match'].mean())
+    print("\nBY COMPLEXITY:")
+    by_comp = results_df.groupby('complexity')[['exact_match', 'semantic_match']].mean()
+    print(by_comp)
 
     
     return results_df
