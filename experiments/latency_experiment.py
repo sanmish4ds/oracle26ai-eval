@@ -1,6 +1,8 @@
+import sys
 import time
 import pandas as pd
-from db_utils import init_ai_session
+sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
+from src.core.db_utils import init_ai_session
 
 def run_latency_test(cursor):
     """
@@ -82,3 +84,9 @@ def run_latency_test(cursor):
     print(f"Avg Overhead Ratio: {df['overhead_ratio'].mean():.2f}x")
     
     return df
+
+if __name__ == "__main__":
+    from src.core.db_utils import get_connection
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            run_latency_test(cursor)
