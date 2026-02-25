@@ -1,6 +1,8 @@
+import sys
 import time
 import pandas as pd
-from ..core.db_utils import init_ai_session
+sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
+from src.core.db_utils import init_ai_session
 
 def run_latency_test(cursor):
     """
@@ -18,7 +20,7 @@ def run_latency_test(cursor):
 
     for row in rows:
         qid, nl, gt_sql = row
-        print(f"⏱️ Timing Q{qid}: {nl[:50]}...")
+        print(f"Timing Q{qid}: {nl[:50]}...")
         
         try:
             # STAGE 1: Measure LLM Generation (The 'Thinking' phase)
@@ -61,16 +63,16 @@ def run_latency_test(cursor):
             })
 
         except Exception as e:
-            print(f"❌ Latency Error Q{qid}: {e}")
+            print(f"Latency Error Q{qid}: {e}")
 
     df = pd.DataFrame(results)
     
     # Save to CSV
     df.to_csv('latency_results.csv', index=False)
-    print("\n✅ Results saved to latency_results.csv")
+    print("\nResults saved to latency_results.csv")
     
     # Statistical analysis
-    print("\n=== LATENCY STATISTICS ===")
+    print("\nLATENCY STATISTICS")
     print(f"Mean: {df['total_latency_ms'].mean():.2f} ms")
     print(f"Median: {df['total_latency_ms'].median():.2f} ms")
     print(f"P95: {df['total_latency_ms'].quantile(0.95):.2f} ms")
@@ -82,3 +84,9 @@ def run_latency_test(cursor):
     print(f"Avg Overhead Ratio: {df['overhead_ratio'].mean():.2f}x")
     
     return df
+
+if __name__ == "__main__":
+    from src.core.db_utils import get_connection
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            run_latency_test(cursor)
