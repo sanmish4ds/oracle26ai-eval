@@ -33,24 +33,26 @@ def run_latency_test(cursor):
             llm_ms = (time.time() - start_llm) * 1000
 
             # STAGE 2: Measure Oracle Execution (The 'Doing' phase)
-            # Wrap queries with COUNT(*) to avoid fetching massive result sets
+            # Execute full SQL and measure TRUE execution time (including network transfer)
             if qid == 21:
                 cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
             
             start_exe = time.time()
-            count_query = f"SELECT COUNT(*) FROM ({generated_sql})"
-            cursor.execute(count_query)
-            ai_count = cursor.fetchone()[0]
+            cursor.execute(generated_sql)
+            ai_results = cursor.fetchall()  # Fetch actual results for true latency
             exe_ms = (time.time() - start_exe) * 1000
+            ai_count = len(ai_results)
             ai_results = f"[{ai_count} rows]"
             
-            # STAGE 3: Get Ground Truth Results
+            # STAGE 3: Get Ground Truth Results (measure true execution time)
             if qid == 21:
                 cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
             
-            count_query = f"SELECT COUNT(*) FROM ({gt_sql})"
-            cursor.execute(count_query)
-            gt_count = cursor.fetchone()[0]
+            start_gt = time.time()
+            cursor.execute(gt_sql)
+            gt_results = cursor.fetchall()  # Fetch actual results
+            gt_ms = (time.time() - start_gt) * 1000
+            gt_count = len(gt_results)
             gt_results = f"[{gt_count} rows]"
             
             total_ms = llm_ms + exe_ms
@@ -67,8 +69,9 @@ def run_latency_test(cursor):
                 'ai_results': ai_results_str,
                 'gt_results': gt_results_str,
                 'llm_latency_ms': round(llm_ms, 2),
-                'oracle_exe_ms': round(exe_ms, 2),
-                'total_latency_ms': round(total_ms, 2),
+                'ai_exe_ms': round(exe_ms, 2),
+                'gt_exe_ms': round(gt_ms, 2),
+                'total_ai_latency_ms': round(total_ms, 2),
                 'overhead_ratio': round(llm_ms / exe_ms, 2) if exe_ms > 0 else 0
             })
 
@@ -82,16 +85,17 @@ def run_latency_test(cursor):
     print("\nResults saved to latency_results.csv")
     
     # Statistical analysis
-    print("\nLATENCY STATISTICS")
-    print(f"Mean: {df['total_latency_ms'].mean():.2f} ms")
-    print(f"Median: {df['total_latency_ms'].median():.2f} ms")
-    print(f"P95: {df['total_latency_ms'].quantile(0.95):.2f} ms")
-    print(f"P99: {df['total_latency_ms'].quantile(0.99):.2f} ms")
+    print("\nLATENCY STATISTICS (TRUE END-TO-END EXECUTION TIME)")
+    print(f"Mean: {df['total_ai_latency_ms'].mean():.2f} ms")
+    print(f"Median: {df['total_ai_latency_ms'].median():.2f} ms")
+    print(f"P95: {df['total_ai_latency_ms'].quantile(0.95):.2f} ms")
+    print(f"P99: {df['total_ai_latency_ms'].quantile(0.99):.2f} ms")
     
     print("\n=== BREAKDOWN ANALYSIS ===")
     print(f"Avg LLM Generation Time: {df['llm_latency_ms'].mean():.2f} ms")
-    print(f"Avg Oracle Execution Time: {df['oracle_exe_ms'].mean():.2f} ms")
-    print(f"Avg Overhead Ratio: {df['overhead_ratio'].mean():.2f}x")
+    print(f"Avg AI SQL Execution Time: {df['ai_exe_ms'].mean():.2f} ms (includes network transfer)")
+    print(f"Avg Ground Truth Execution Time: {df['gt_exe_ms'].mean():.2f} ms")
+    print(f"Avg Overhead Ratio (LLM/AI-Exe): {(df['llm_latency_ms'] / df['ai_exe_ms']).mean():.2f}x")
     
     return df
 
