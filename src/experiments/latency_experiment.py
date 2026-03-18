@@ -1,8 +1,9 @@
 import sys
 import time
 import pandas as pd
+
 sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
-from src.core.db_utils import init_ai_session
+from src.core.select_ai_utils import init_ai_session, generate_select_ai_sql, set_time_limit
 
 def run_latency_test(cursor):
     """
@@ -26,17 +27,14 @@ def run_latency_test(cursor):
             # STAGE 1: Measure LLM Generation (The 'Thinking' phase)
             # action => 'showsql' stops Oracle from running the query, giving us pure LLM time.
             start_llm = time.time()
-            gen_cmd = f"SELECT DBMS_CLOUD_AI.GENERATE(prompt => '{nl}', action => 'showsql') FROM DUAL"
-            cursor.execute(gen_cmd)
-            generated_sql = cursor.fetchone()[0]
-            #print(f"Generated SQL: {generated_sql}")  # Debug: print generated SQL
+            generated_sql = generate_select_ai_sql(cursor, nl, action="showsql")
             llm_ms = (time.time() - start_llm) * 1000
 
             # STAGE 2: Measure Oracle Execution (The 'Doing' phase)
             # Execute full SQL and measure TRUE execution time (including network transfer)
             if qid == 21:
-                cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
-            
+                set_time_limit(cursor, 60)  # 60 sec timeout for Q21
+
             start_exe = time.time()
             cursor.execute(generated_sql)
             ai_results = cursor.fetchall()  # Fetch actual results for true latency
@@ -46,8 +44,8 @@ def run_latency_test(cursor):
             
             # STAGE 3: Get Ground Truth Results (measure true execution time)
             if qid == 21:
-                cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(60); END;", ())  # 60 sec timeout for Q21
-            
+                set_time_limit(cursor, 60)  # 60 sec timeout for Q21
+
             start_gt = time.time()
             cursor.execute(gt_sql)
             gt_results = cursor.fetchall()  # Fetch actual results

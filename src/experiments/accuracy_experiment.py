@@ -2,8 +2,9 @@
 import sys
 import time
 import pandas as pd
+
 sys.path.insert(0, '/Users/sanjaymishra/oracle26ai-eval')
-from src.core.db_utils import init_ai_session
+from src.core.select_ai_utils import init_ai_session, generate_select_ai_sql, set_time_limit
 
 def is_semantically_equivalent(ai_res, gt_res, ai_query, gt_sql):
     """Check if results are semantically equivalent (same row count & pattern match)"""
@@ -47,15 +48,12 @@ def run_accuracy_test(cursor):
         try:
             # 1. AI SQL Generation
             start = time.time()
-            gen_cmd = f"SELECT DBMS_CLOUD_AI.GENERATE(prompt => '{nl}', action => 'showsql') FROM DUAL"
-            cursor.execute(gen_cmd)
-            ai_query = cursor.fetchone()[0]
-            #print(f"Generated SQL: {ai_query}")  # Debug: print generated SQL
-            
+            ai_query = generate_select_ai_sql(cursor, nl, action="showsql")
+
             # 2. AI Execution - wrap with COUNT(*) for performance
             if qid == 21:
-                cursor.execute("BEGIN DBMS_SESSION.SET_TIME_LIMIT(300); END;", ())  # 5 min timeout
-            
+                set_time_limit(cursor, 300)  # 5 min timeout
+
             count_query = f"SELECT COUNT(*) FROM ({ai_query})"
             cursor.execute(count_query)
             ai_count = cursor.fetchone()[0]
